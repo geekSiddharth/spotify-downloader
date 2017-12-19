@@ -17,6 +17,9 @@ import time
 import sys
 import platform
 import pprint
+import spotipy.util as util
+
+myusername = '217fyj52gog6a4ljqcydluh6y'
 
 
 def generate_songname(tags):
@@ -70,7 +73,7 @@ def is_video(result):
 
     # ensure result is not a mix/playlist
     not_video = not_video or \
-               'yt-lockup-playlist' in result.parent.attrs['class']
+                'yt-lockup-playlist' in result.parent.attrs['class']
 
     # ensure video result is not an advertisement
     not_video = not_video or \
@@ -130,8 +133,8 @@ def generate_youtube_url(raw_song, meta_tags, tries_remaining=5):
         log.info('0. Skip downloading this song.\n')
         # fetch all video links on first page on YouTube
         for i, v in enumerate(videos):
-            log.info(u'{0}. {1} {2} {3}'.format(i+1, v['title'], v['videotime'],
-                  "http://youtube.com"+v['link']))
+            log.info(u'{0}. {1} {2} {3}'.format(i + 1, v['title'], v['videotime'],
+                                                "http://youtube.com" + v['link']))
         # let user select the song to download
         result = internals.input_link(videos)
         if result is None:
@@ -154,10 +157,12 @@ def generate_youtube_url(raw_song, meta_tags, tries_remaining=5):
             the duration_tolerance has reached the max_duration_tolerance
             '''
             while len(possible_videos_by_duration) == 0:
-                possible_videos_by_duration = list(filter(lambda x: abs(x['seconds'] - (int(meta_tags['duration_ms'])/1000)) <= duration_tolerance, videos))
+                possible_videos_by_duration = list(
+                    filter(lambda x: abs(x['seconds'] - (int(meta_tags['duration_ms']) / 1000)) <= duration_tolerance,
+                           videos))
                 duration_tolerance += 1
                 if duration_tolerance > max_duration_tolerance:
-                    log.error("{0} by {1} was not found.\n".format(meta_tags['name'],meta_tags['artists'][0]['name']))
+                    log.error("{0} by {1} was not found.\n".format(meta_tags['name'], meta_tags['artists'][0]['name']))
                     return None
 
             result = possible_videos_by_duration[0]
@@ -195,12 +200,50 @@ def get_youtube_title(content, number=None):
         return '{0}. {1}'.format(number, title)
 
 
+def get_top_tracks():
+    print("Starting top tracks")
+    ranges = ['short_term', 'medium_term', 'long_term']
+    write_tracks("/home/sid/Music/spotify-downloader/data/top_tracks.txt", spotify.current_user_top_tracks(limit=200, time_range=ranges))
+    args.folder = "/home/sid/Music/Spotify/TopTracks"
+    if not os.path.exists(args.folder):
+        os.mkdir(args.folder)
+    grab_list("/home/sid/Music/spotify-downloader/data/top_tracks.txt")
+
+
+
+def get_all_albums():
+    print("Starting Albums")
+    args.folder = "/home/sid/Music/spotify-downloader/"
+    feed_albums(spotify.current_user_saved_albums(limit=50))
+
+
+def get_all_saved_tracks():
+    print("Starting Saved Tracks")
+    write_tracks("/home/sid/Music/spotify-downloader/data/my_saved_list.txt", spotify.current_user_saved_tracks())
+    args.folder = "/home/sid/Music/Spotify/SavedTracks"
+    if not os.path.exists(args.folder):
+        os.mkdir(args.folder)
+    grab_list("data/my_saved_list.txt")
+
+
+
+def feed_albums(albums):
+    while True:
+        for album in albums['items']:
+            write_album(album['album'])
+        if albums['next']:
+            albums = spotify.next(albums)
+        else:
+            break
+
+
 def feed_playlist(username):
     """ Fetch user playlists when using the -u option. """
+
     playlists = spotify.user_playlists(username)
     links = []
     check = 1
-
+    spotify.user(username)
     while True:
         for playlist in playlists['items']:
             # in rare cases, playlists may not be found, so playlists['next']
@@ -217,12 +260,13 @@ def feed_playlist(username):
         else:
             break
 
-    playlist = internals.input_link(links)
-    write_playlist(playlist['owner']['id'], playlist['id'])
+    for playlist in links:
+        write_playlist(playlist['owner']['id'], playlist['id'])
+
 
 
 def write_tracks(text_file, tracks):
-    with open(text_file, 'a') as file_out:
+    with open(text_file, 'w') as file_out:
         while True:
             for item in tracks['items']:
                 if 'track' in item:
@@ -247,19 +291,27 @@ def write_tracks(text_file, tracks):
 def write_playlist(username, playlist_id):
     results = spotify.user_playlist(username, playlist_id,
                                     fields='tracks,next,name')
-    text_file = u'{0}.txt'.format(slugify(results['name'], ok='-_()[]{}'))
+    text_file = u'/home/sid/Music/spotify-downloader/data/{0}.txt'.format(slugify(results['name'], ok='-_()[]{}'))
     log.info(u'Writing {0} tracks to {1}'.format(
-               results['tracks']['total'], text_file))
+        results['tracks']['total'], text_file))
     tracks = results['tracks']
     write_tracks(text_file, tracks)
+    args.folder = "/home/sid/Music/Spotify/Playlists/{0}".format(slugify(results['name'], ok='-_()[]{}'))
+    if not os.path.exists(args.folder):
+        os.mkdir(args.folder)
+    grab_list(text_file)
 
 
 def write_album(album):
     tracks = spotify.album_tracks(album['id'])
-    text_file = u'{0}.txt'.format(slugify(album['name'], ok='-_()[]{}'))
+    text_file = u'/home/sid/Music/spotify-downloader/data/{0}.txt'.format(slugify(album['name'], ok='-_()[]{}'))
     log.info(u'writing {0} tracks to {1}'.format(
-               tracks['total'], text_file))
+        tracks['total'], text_file))
     write_tracks(text_file, tracks)
+    args.folder = "/home/sid/Music/Spotify/Albums/{0}".format(slugify(album['name'], ok='-_()[]{}'))
+    if not os.path.exists(args.folder):
+        os.mkdir(args.folder)
+    grab_list(text_file)
 
 
 def download_song(file_name, content):
@@ -298,7 +350,7 @@ def check_exists(music_file, raw_song, meta_tags, islist=True):
                 already_tagged = metadata.compare(os.path.join(args.folder, song),
                                                   meta_tags)
                 log.debug('Checking if it is already tagged correctly? {}',
-                                                            already_tagged)
+                          already_tagged)
                 if not already_tagged:
                     os.remove(os.path.join(args.folder, song))
                     return False
@@ -458,7 +510,7 @@ if __name__ == '__main__':
     internals.filter_path(args.folder)
 
     logger.log = logger.logzero.setup_logger(formatter=logger.formatter,
-                                      level=args.log_level)
+                                             level=args.log_level)
     log = logger.log
     log.debug('Python version: {}'.format(sys.version))
     log.debug('Platform: {}'.format(platform.platform()))
@@ -474,7 +526,17 @@ if __name__ == '__main__':
         elif args.album:
             grab_album(album=args.album)
         elif args.username:
-            feed_playlist(username=args.username)
+            import login
+            spotify = login.login()
+            ch = args.username
+            if ch == "top":
+                get_top_tracks()
+            elif ch == "saved":
+                get_all_saved_tracks()
+            elif ch == "album":
+                get_all_albums()
+            elif ch == "playlist":
+                feed_playlist(login.myusername)
         sys.exit(0)
 
     except KeyboardInterrupt as e:

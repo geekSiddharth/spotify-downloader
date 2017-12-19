@@ -60,7 +60,7 @@ def get_arguments():
         help='Use avconv for conversion otherwise set defaults to ffmpeg',
         action='store_true')
     parser.add_argument(
-        '-f', '--folder', default=(os.path.join(sys.path[0], 'Music')),
+        '-f', '--folder', default=("/home/sid/Music/Spotify"),
         help='path to folder where files will be stored in')
     parser.add_argument(
         '-i', '--input-ext', default='.m4a',
