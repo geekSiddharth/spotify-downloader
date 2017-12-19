@@ -48,7 +48,11 @@ def get_arguments():
         '-b', '--album', help='load songs from album URL into <album_name>.txt')
     group.add_argument(
         '-u', '--username',
-        help="load songs from user's playlist into <playlist_name>.txt")
+        help="""choice [  top | saved | album | playlist ]
+                         top will download your top 100 tracks
+                         saved will download all of your saved tracks
+                         album will download all of your followed albums
+                         playlist will download all of your playlists""")
     parser.add_argument(
         '-m', '--manual', default=False,
         help='choose the song to download manually', action='store_true')
