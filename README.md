@@ -1,45 +1,20 @@
 # Spotify-Downloader
 
-[![Build Status](https://travis-ci.org/ritiek/spotify-downloader.svg?branch=master)](https://travis-ci.org/ritiek/spotify-downloader)
-
 - Downloads songs from YouTube in an MP3 format by using Spotify's HTTP link.
 
 - Can also download a song by entering its artist and song name (in case if you don't have the Spotify's HTTP link for some song).
 
 - Automatically fixes song's meta-tags which include:
 
-  - Title
-  - Artist
-  - Album
-  - Album art
-  - Album artist
-  - Genre
-  - Track number
-  - Disc number
-  - Release date
-  - And more...
+- Download your top tracks, saved tracks and saved albums in a single command respectively
 
-- Works straight out of the box and does not require to generate or mess with your API keys.
 
-That's how your Music library will look like!
 
-<img src="http://i.imgur.com/Gpch7JI.png" width="290"><img src="http://i.imgur.com/5vhk3HY.png" width="290"><img src="http://i.imgur.com/RDTCCST.png" width="290">
-
-## Contributing
-
-- Search for your problem in the [issues section](https://github.com/Ritiek/spotify-downloader/issues?utf8=%E2%9C%93&q=) before opening a new ticket. It might be already answered and save us time. :smile:
-
-- Provide as much information possible when opening your ticket.
-
-- Look up for open issues and see if you can help out there.
-
-- There's also a web-based application for this tool under (major) work called [spotifube](https://github.com/djalmaaraujo/spotifube). Check it out if you'd like to contribute to it!
 
 ## Installation & Usage
 
-- **This tool supports only Python 3**, Python 2 compatibility was dropped because of the way it deals with unicode. If you need to use Python 2 though, check out the (old) `python2` branch.
+- **This tool supports only Python 3**,
 
-- Note: `play` and `lyrics` commands have been deprecated in the current branch since they were not of much use and created unnecessary clutter. You can still get them back by using `old` branch though.
 
 ### Debian, Ubuntu, Linux & Mac
 
@@ -88,13 +63,14 @@ docker run --rm -v $(pwd):/app ritiek/spotdl -l acoustic-blues.txt
 
 - For all available options, run `python3 spotdl.py --help`.
 
+
 ```
 usage: spotdl.py [-h]
                  (-s SONG | -l LIST | -p PLAYLIST | -b ALBUM | -u USERNAME)
                  [-m] [-nm] [-a] [-f FOLDER] [-v] [-i INPUT_EXT]
                  [-o OUTPUT_EXT] [-ll {INFO,WARNING,ERROR,DEBUG}]
 
-Download and convert songs from Spotify, Youtube etc.
+Download and convert songs from Spotify, Youtube etc.Things are saves to /home/sid/Music/Spotify/
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -106,16 +82,16 @@ optional arguments:
   -b ALBUM, --album ALBUM
                         load songs from album URL into <album_name>.txt
                         (default: None)
-  -u USERNAME, --username USERNAME
-                        load songs from user's playlist into
-                        <playlist_name>.txt (default: None)
+  -u choice, --username choice [  top | saved | album | playlist ]
+                         top will download your top 100 tracks
+                         saved will download all of your saved tracks
+                         album will download all of your followed albums
+                         playlist will download all of your playlists
+                        
   -m, --manual          choose the song to download manually (default: False)
   -nm, --no-metadata    do not embed metadata in songs (default: False)
   -a, --avconv          Use avconv for conversion otherwise set defaults to
                         ffmpeg (default: False)
-  -f FOLDER, --folder FOLDER
-                        path to folder where files will be stored in (default:
-                        Music/)
   -i INPUT_EXT, --input-ext INPUT_EXT
                         prefered input format .m4a or .webm (Opus) (default:
                         .m4a)
@@ -238,6 +214,16 @@ Obviously this requires the `pytest` module to be installed.
 ## Disclaimer
 
 Downloading copyright songs may be illegal in your country. This tool is for educational purposes only and was created only to show how Spotify's API can be exploited to download music from YouTube. Please support the artists by buying their music.
+
+## Contributing
+
+- Search for your problem in the [issues section](https://github.com/Ritiek/spotify-downloader/issues?utf8=%E2%9C%93&q=) before opening a new ticket. It might be already answered and save us time. :smile:
+
+- Provide as much information possible when opening your ticket.
+
+- Look up for open issues and see if you can help out there.
+
+- There's also a web-based application for this tool under (major) work called [spotifube](https://github.com/djalmaaraujo/spotifube). Check it out if you'd like to contribute to it!
 
 ## License
 
